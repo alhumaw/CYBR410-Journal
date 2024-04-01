@@ -1,4 +1,4 @@
-# CYBR410-Journal
+# Introduction
 
 - This journal aims to track my learning progress in cybersecurity defense. 
 
