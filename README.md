@@ -1,6 +1,6 @@
 # Introduction
 
-- This journal aims to track my learning progress in cybersecurity defense. 
+- This journal aims to track my learning progress in the art of cybersecurity defense. 
 
 - Here, I will have daily writeups of the material I have learned each day.
 
