@@ -8,4 +8,4 @@
 
 ## Contents
 - [Generating SSH Keys](CYBR410/Week1/04-01-24.md)
-- [chroot](CYBR410/Week1/04-02-24.md)
+- [chroot \- Mount a Drive and Become (G)ROOT](CYBR410/Week1/04-02-24.md)
