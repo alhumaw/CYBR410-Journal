@@ -1,0 +1,93 @@
+## Alexander Moomaw (CYBR410)
+### Overview:
+- Understand cgroups by first explaining them. Then, use cgroups in a few different ways to cement our understanding.
+### Part 1 - What are cgroups?
+- Control Groups, or *cgroups*, allow a user to manage and limit system resources that a process can use. 
+- We can think of *cgroups* as being an overarching group policy with which members of that group must follow. 
+- With *cgroups*, we can limit the amount of CPU, memory, Disk I/O, and even network bandwidth.
+- Control groups are able to be modified dynamically as well. So if we decide we need to allocate more memory to a control group, we definitely can.
+- There is a certain *organizational structure* to *cgroups*
+	- Like processes, they are hierarchal and can have children. Unlike processes, they are not just one huge hierarchy of cgroups. There can be many different hierarchal trees that aren't connected. 
+	- *cgroups* choose to be this way because they have many different *subsystems*
+		- A subsystem represents a resource, that of which we have mentioned above.
+		- Each subsystem can be attached to a different hierarchy, enabling precise control over various types of resources independently.
+		- On Ubuntu-22.04, the current subsystems are: cpuset, cpu, cpuacct, blkio, memory, devices, freezer, net_cls, perf_event, net_prio, hugetlb, pids, rdma, and misc
+- Given that cgroups use a hierarchal model, they will have *children cgroups.*
+	- Each child cgroup has it's own resource limit. This resource limit *cannot* exceed its parents current resource limit.
+- To use *cgroups* we will utilize *systemd*
+	-  *systemd* is a service that provides basic building blocks for a Linux system.
+	- Specifically, we will use ```systemd-run``` to create a *transient cgroup*
+		- A *transient cgroup* will only exist during runtime and are released automatically as soon as they either finish or the system is rebooted.
+
+### Part 2 - Creating a cgroup with systemd-run & cgexec
+- In order for us to test that our cgroup is actually controlling processes, we have to create an application that will use the resources beyond the limit.
+	- ```sudo su```<- **we will be running all commands as root**
+- Luckily, there is a service that will generate processes for us, specifically to test the CPU, *stress*. We will install it below on an Ubuntu virtual machine:
+	- ```apt-get install stress -y```
+- We will first create a cgroup that limits it's processes to a certain amount of CPU usage. Then, we will utilize *stress* to spin up processes within that cgroup that will attempt to utilize more than it is allocated. This will be our method to test whether the cgroup actually works.
+- ##### Part 2a - systemd-run --slice
+	- To start our cgroup, we have to look inside the man-pages to find out how to limit our CPU usage. I found mention of ```systemd.resource-control``` in the ```systemd-run``` manual. 
+		- ```CPUQuota = Assign the specified CPU time quota to the processes executed. Takes a percentage value ```
+		- ```Example: CPUQuota = 20% ensures that the executed process will never get more than 20% CPU time on one CPU.```
+	- The requirement for the task is that we use *systemd-run* with  *--slice* flag
+		- The slice flag allows us to select a service or scope unit. A slice file is structured like the image below:
+- ![[Screenshot 2024-04-04 at 11.18.57 PM.png]]
+	- Let's create a slice file in that same directory
+	- ```printf "[Slice]\nCPUQuota=20%%\n" > /etc/systemd/system/cpu_test.slice```
+	- This command will create a slice file that restricts process cpu usage to never be more than 20% of our total CPU.
+	- With this new-found knowledge we can begin crafting our command to create a cgroup with a CPU limit:
+		- ```systemd-run -u=cpu_test --slice=cpu_test.slice```
+		- The cgroup needs to have a process assigned to it, this is where we'll utilize the *stress* service to test if our cgroup is correctly working
+			- ```stress -c 4``` <- put 100% load on 4 CPUs
+			- ![[Pasted image 20240404233936.png]]
+			- As you can see this stress service is being ran without our cgroup.
+	- Let us now form our full command that will allow us to limit CPU usage on the stress processes that spawn:
+		- ```systemd-run -u cpu_test --slice=cpu_test.slice stress -c 4```
+		- ![[Pasted image 20240404234333.png]]
+		- Now, to make sure this works we can run top again and see if the CPU usage is being limited by the cgroup
+		- ![[Pasted image 20240404234429.png]]
+		- ### **Looks Good!**
+- ##### Part2b -  systemd-run --scope 
+	- Given the context above, I find it only necessary to just explain the *--scope* command, then just run it to see if it is correctly being limited with our new command. This time around we will limit our memory to be 500M: ```MemoryMax=500M```
+	- Given that *stress* does not include a memory limiter, we can use *stress-ng* to do the job for us:
+		- ```apt-get install stress-ng```
+		- *--scope* allows us to set our memory limiter on the terminal command, circumventing the use of our slice file. In this instance, we will set it on the *stress* the exact same way as before:
+	- ```systemd-run -u mem_test --scope -p MemoryMax=500M stress-ng --vm 1 --vm-bytes 600M```
+	- ![[Pasted image 20240405000744.png]]
+	- ![[Pasted image 20240405000620.png]]
+	- This output shows the resident memory (RES) is being limited to the 500M we set it at.
+- ##### Part2c - cgexec
+	- *cgexec* is just another method for controlling cgroups. This method allows us to modify already existing cgroups programmatically.
+	- This time, we'll try to limit I/O within a cgroup that we create and assign processes to. 
+	- Given that we're using I/O this time around, the parent cgroup doesn't natively include I/O as a control resource. We have to set it ourselves:
+		- ```echo "+io" > /sys/fs/cgroup/cgroup.subtree_control```
+		- *cgroup.subtree_control* allows us to modify currently controlled resources
+	- If we check *cgroup.controllers*, we can see that it was added:
+		- ```cat cgroup.controllers```
+	- Now we can make our sub-cgroup within this parent directory and it will inherit the resources from our current parent:
+		- ```mkdir blkio```
+	- Inside our *blkio* cgroup we have access to an *io.max*, which allows us to restrict the amount of IO any process assigned to this cgroup can use.  We will limit our write bytes per second (wbps) to 10 M/s, this will clearly show our cgroup in action.
+		- ```echo "8:0 wbps=10485760" > io.max```
+		- The 8:0 in this represents /dev/sda
+	- With this all set up, I will first use dd to write 2GB to a file:
+		- ```dd if=/dev/zero of=/tmp/dd_test bs=2M count=1024 oflag=direct```
+		- ![[Pasted image 20240408174925.png]]
+	- We can see that the file wrote at 2.0 GB/s. If we use cgexec we can limit that heavily:
+		- ```cgexec -g io:blkio ./dd_script.sh```
+		- ![[Pasted image 20240408175420.png]]
+		- ![[Pasted image 20240408175941.png]]
+		- Here, the process has executed within it's subgroup but it will take much longer because our writes per second are limited to 10 M/s
+
+##### Sources Cited:
+- **cgroupsv2** - https://docs.kernel.org/admin-guide/cgroup-v2.html
+- **Guide to cgroups** - https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/6/html/resource_management_guide/index
+- **Good video on cgroups** - https://www.youtube.com/watch?v=x1npPrzyKfs
+- **Resource limit usage** - https://www.ibm.com/docs/en/spectrum-symphony/7.3.0?topic=limits-control-groups-cgroups-limiting-resource-usage-linux
+- **cgexec** - https://wiki.tnonline.net/w/Linux/cgexec
+- **systemd resource control** - https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html
+- **slice help** - https://man7.org/linux/man-pages/man5/systemd.slice.5.html
+- **CpuQuota usage** - https://www.suse.com/support/kb/doc/?id=000019590
+- **scope help** - https://www.freedesktop.org/software/systemd/man/latest/systemd.scope.html
+- **stress docs** - https://linux.die.net/man/1/stress
+- **stress-ng docs** - https://manpages.ubuntu.com/manpages/jammy/man1/stress-ng.1.html
+- **cgroupsv2 stuff** - https://medium.com/@charles.vissol/practicing-cgroup-v2-cad6743bba0c
