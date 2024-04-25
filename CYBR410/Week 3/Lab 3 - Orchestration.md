@@ -41,7 +41,7 @@ First off you will need a container that has a web service you want to host. I u
 - **How many instances of the container are running?**
 	- There are three instances of our container running. This can be increased or decreased by modifying the `replicas` tag in `test.yaml`
 - **What happens if one of these containers is destroyed?**
-	- If one of the containers is destroyed, there should be other containers in our deployment that will cover the load of that destroyed container.
+	- If one of the containers is destroyed, kubernetes orchestration is monitoring our pods. The service will work to consistently run the amount of containers we request so that container will come back up.
 	- The load balancer will redirect traffic to the other pods.
 	- The containers health will be displayed in our pod list, indicating a specific issue.
 
