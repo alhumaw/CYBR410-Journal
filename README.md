@@ -13,3 +13,5 @@
 - [cgroups](CYBR410/Week%201/Week-1-Lab-(cgroups).md)
 - [namespaces](CYBR410/Week%202/04-09-2024.md)
 - [Containers](CYBR410/Week%202/Lab-2-Containers.md)
+- [A lot of Docker](CYBR410/Week%203)
+- [Moving Target Defense](CYBR410/Week%204)
