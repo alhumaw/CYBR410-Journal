@@ -1,0 +1,167 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\ifLuaTeX
+  \usepackage{luacolor}
+  \usepackage[soul]{lua-ul}
+\else
+  \usepackage{soul}
+\fi
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Lab 4 - More k8s},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Lab 4 - More k8s}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\subsection{Cybersecurity}\label{cybersecurity}
+
+\section{Lab 4 - More k8s}\label{lab-4---more-k8s}
+
+CYBR410 - Applied Cyber Operations
+
+\st{04-29-24 - Alexander Moomaw}
+
+\subsection{Simple Container}\label{simple-container}
+
+\emph{Create a simple program that we can easily tell is running behind
+a load balancer. This can be as easy as creating a random number each
+time the program starts (that is returned to the user) or a counter that
+increments each time the page is loaded.}
+
+\subsubsection{Create the server:}\label{create-the-server}
+
+\begin{itemize}
+\tightlist
+\item
+  Utilize Pythons\textquotesingle{} \emph{flask} and \emph{random}
+  module
+\item
+  Generate a global random int between 1 and 100
+\item
+  Create a function bound to our web servers root directory that serves
+  our index.html file and inserts our random integer into the home page
+\item
+  Serve our content locally on port 8000
+\end{itemize}
+
+\subsubsection{Inside index.html:}\label{inside-index.html}
+
+\begin{itemize}
+\tightlist
+\item
+  Make a new directory inside our web server directory, named templates.
+\item
+  Place our index.html file in the templates directory
+\item
+  Create generic content that displays that random integer
+\end{itemize}
+
+\subsection{Kubernetes}\label{kubernetes}
+
+\emph{As before, push the new container to our k8s registry and create
+the two yaml files needed to run your container in k8s. Make sure you
+can reach your service and that it's running via a k8s pod (exactly the
+same thing as last lab).}
+
+\subsubsection{To push our newly created web server to
+kubernetes:}\label{to-push-our-newly-created-web-server-to-kubernetes}
+
+\begin{itemize}
+\tightlist
+\item
+  \texttt{docker\ tag\ flask\ localhost:32000/flask:k8s}
+\item
+  \texttt{docker\ push\ localhost:32000/flask:k8s}
+\end{itemize}
+
+\subsubsection{What needs to change in our YAML
+file:}\label{what-needs-to-change-in-our-yaml-file}
+
+\begin{itemize}
+\tightlist
+\item
+  Inside test.yaml:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \texttt{image:\ localhost:32000/flask:k8s}
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Spin up our cluster:}\label{spin-up-our-cluster}
+
+\begin{itemize}
+\tightlist
+\item
+  \texttt{microk8s.kubectl\ apply\ -f\ test.yaml}
+\item
+  \texttt{microk8s.kubectl\ apply\ -f\ test-svc.yaml}
+\end{itemize}
+
+\subsection{More Kubernetes}\label{more-kubernetes}
+
+\emph{Delete a process running in the pod/container you created (kill -9
+PID). Run the command that shows the pods (microk8s.kubectl get pods
+--all-namespaces), has anything changed? Elaborate.}
+
+\emph{Try and reach the service you created many times (curl or
+browser). Can you observe the load balancer at work? Do you always get
+the same page? Do you always get a different page?}
+
+\emph{Describe a service (microk8s.kubectl describe service SERVICE
+NAME).Can I reach each individual pod being load balanced? Where do you
+see this information? Explain how this could be useful}
+
+\end{document}
