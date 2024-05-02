@@ -36,8 +36,18 @@
 
 ## More Kubernetes
 *Delete a process running in the pod/container you created (kill -9 PID). Run the command that shows the pods (microk8s.kubectl get pods –all-namespaces), has anything changed? Elaborate.*
+- When you kill a process within a pod, it will recognize a crashed process and restart the pod. This can be indicated by viewing the affected pod: `microk8s.kubectl get pods –all-namespaces`
+	- ![[Pasted image 20240501102749.png]]
 
 *Try and reach the service you created many times (curl or browser). Can you observe the load balancer at work? Do you always get the same page? Do you always get a different page?*
-
+- You don't always get the same page, and you don't always get a different page. Load balancing at this scale is seemingly done at random just due to the fact that there really isn't too much load on any of the instances. So sometimes I resolved to the same instance, sometimes I did not.
+![[Pasted image 20240501103236.png]]
 *Describe a service (microk8s.kubectl describe service SERVICE NAME).Can I reach each individual pod being load balanced? Where do you see this information? Explain how this could be useful*
+- Each pod within that load balancer has it's own IP address and is able to be individually accessed:
+	- ![[Pasted image 20240501103434.png]]
+- This can be useful in instances where you want to individually troubleshoot a specific pod. Or if you want a specific action to always be sent to a specific pod.
+
+**Sources Cited:**
+- https://kubernetes.io/docs/reference/kubectl/quick-reference/
+
 
