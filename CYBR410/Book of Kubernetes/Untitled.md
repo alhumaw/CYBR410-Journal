@@ -1,10 +1,18 @@
-<p align="center"><h1> Chapter 5 - Container Images/Runtime Errors</h1>
+# Chapter 6 - Why Kubernetes Matters
 
-<h3><p align="left">Container Image Contents</p></h3>
-<ul>
-<li>An <strong>image registry</strong> is a web server that implements an API for downloading and publishing container images </li>
-<li></li>
-</ul>
 
+### Cross-Cutting Concerns
+- Kubernetes needs to account for certain design parameters:
+	- **Dynamic Scheduling**
+	- **Distributed State**
+	- **Multitenancy** - Running multiple apps in a single cluster
+	- **Hardware Isolation**
+
+### Kubernetes Concepts
+- **Separate Control Plane**
+	- Container orchestration is provided by *nodes*
+	- 
+- **Declarative API**
+- **Self-Healing**
 
  

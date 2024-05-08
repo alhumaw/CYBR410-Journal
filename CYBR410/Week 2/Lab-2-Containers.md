@@ -1,3 +1,22 @@
+---
+title: Your Awesome Academic Title
+abstract: Lorem markdownum corpus. Date vastarumque artis a incepto Quodsi,
+  pressit diversaque tersit excita. Ponti posset quo atro. Ama ungues quo via
+  quaerenti culmine haesit moenibus iugum, pluribus flumina ingens.
+authors:
+  - name: Leonardo V. Castorina
+    affiliation: School of Informatics
+    institution: University of Edinburgh
+    email: justanemail@domain.ext
+    address: Edinburgh
+  - name: Coauthor
+    affiliation: Affiliation
+    institution: Institution
+    email: coauthor@example.com
+    address: Address
+reference-section-title: References
+---
+
 ## Alexander Moomaw - Lab 2 (Containers)
 
 ### Overview:  
@@ -24,7 +43,7 @@ Debootstrap is a good choice for Debian/Ubuntu systems.
 - **Try changing your hostname:**  
 	- sudo hostname newhost  
 - **What output do you get when you run hostname?**  
-- ![[Pasted image 20240410161113.png]]
+- ![[Pasted image 20240410161113.png | left]]
 	- **Is this change reflected across terminals?**
 		- **When you run it and then open a new terminal?**
 			- Running the command hostname, then opening a new terminal displays the hostname as *newhost*
